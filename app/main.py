@@ -1,10 +1,10 @@
 import json
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ElementTree
 from typing import Optional, List, Tuple
 
 
 class Book:
-    def __init__(self, title: str, content: str):
+    def __init__(self, title: str, content: str) -> None:
         self.title = title
         self.content = content
 
@@ -20,28 +20,31 @@ class DisplayBook:
 
 
 class PrintBook:
-    def __init__(self, display_service: DisplayBook):
+    def __init__(self, display_service: DisplayBook) -> None:
         self.display_service = display_service
 
     def print_book(self, book: Book, mode: str) -> None:
-        # Отримуємо відформатований рядок від іншого сервісу
         formatted_content = self.display_service.format(book, mode)
         print(f"--- Printing Book: {book.title} ({mode} mode) ---")
         print(formatted_content)
 
 
 class BookSerializer:
-    def __init__(self, book: Book):
+    def __init__(self, book: Book) -> None:
         self.book = book
 
     def to_json(self) -> str:
-        return json.dumps({"title": self.book.title, "content": self.book.content}, ensure_ascii=False)
+        return json.dumps(
+            {"title": self.book.title,
+             "content": self.book.content},
+            ensure_ascii=False
+        )
 
     def to_xml(self) -> str:
-        root = ET.Element("book")
-        ET.SubElement(root, "title").text = self.book.title
-        ET.SubElement(root, "content").text = self.book.content
-        return ET.tostring(root, encoding="unicode")
+        root = ElementTree.Element("book")
+        ElementTree.SubElement(root, "title").text = self.book.title
+        ElementTree.SubElement(root, "content").text = self.book.content
+        return ElementTree.tostring(root, encoding="unicode")
 
     def serialize(self, format_type: str) -> str:
         formats = {
@@ -54,7 +57,11 @@ class BookSerializer:
 
 
 class BookManager:
-    def run(self, book: Book, commands: List[Tuple[str, str]]) -> Optional[str]:
+    def run(
+            self,
+            book: Book,
+            commands: List[Tuple[str, str]]
+    ) -> Optional[str]:
         display_service = DisplayBook()
         printer = PrintBook(display_service)
         serializer = BookSerializer(book)
