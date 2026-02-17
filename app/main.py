@@ -56,7 +56,6 @@ class BookSerializer:
         return formats[format_type]()
 
 
-
 def main(
         book: Book,
         commands: List[Tuple[str, str]]
