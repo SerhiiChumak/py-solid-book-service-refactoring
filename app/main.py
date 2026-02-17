@@ -56,22 +56,21 @@ class BookSerializer:
         return formats[format_type]()
 
 
-class BookManager:
-    def run(
-            self,
-            book: Book,
-            commands: List[Tuple[str, str]]
-    ) -> Optional[str]:
-        display_service = DisplayBook()
-        printer = PrintBook(display_service)
-        serializer = BookSerializer(book)
 
-        last_result = None
+def main(
+        book: Book,
+        commands: List[Tuple[str, str]]
+) -> Optional[str]:
+    display_service = DisplayBook()
+    printer = PrintBook(display_service)
+    serializer = BookSerializer(book)
 
-        for cmd, arg in commands:
-            if cmd == "display" or cmd == "print":
-                printer.print_book(book, arg)
-            elif cmd == "serialize":
-                last_result = serializer.serialize(arg)
+    last_result = None
 
-        return last_result
+    for cmd, arg in commands:
+        if cmd == "display" or cmd == "print":
+            printer.print_book(book, arg)
+        elif cmd == "serialize":
+            last_result = serializer.serialize(arg)
+
+    return last_result
