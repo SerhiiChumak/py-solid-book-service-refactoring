@@ -1,5 +1,6 @@
 import json
 import xml.etree.ElementTree as ET
+from typing import Optional, List, Tuple
 
 
 class Book:
@@ -7,48 +8,63 @@ class Book:
         self.title = title
         self.content = content
 
-    def display(self, display_type: str) -> None:
-        if display_type == "console":
-            print(self.content)
-        elif display_type == "reverse":
-            print(self.content[::-1])
+
+class DisplayBook:
+    def format(self, book: Book, mode: str) -> str:
+        if mode == "console":
+            return book.content
+        elif mode == "reverse":
+            return book.content[::-1]
         else:
-            raise ValueError(f"Unknown display type: {display_type}")
-
-    def print_book(self, print_type: str) -> None:
-        if print_type == "console":
-            print(f"Printing the book: {self.title}...")
-            print(self.content)
-        elif print_type == "reverse":
-            print(f"Printing the book in reverse: {self.title}...")
-            print(self.content[::-1])
-        else:
-            raise ValueError(f"Unknown print type: {print_type}")
-
-    def serialize(self, serialize_type: str) -> str:
-        if serialize_type == "json":
-            return json.dumps({"title": self.title, "content": self.content})
-        elif serialize_type == "xml":
-            root = ET.Element("book")
-            title = ET.SubElement(root, "title")
-            title.text = self.title
-            content = ET.SubElement(root, "content")
-            content.text = self.content
-            return ET.tostring(root, encoding="unicode")
-        else:
-            raise ValueError(f"Unknown serialize type: {serialize_type}")
+            raise ValueError(f"Unknown display type: {mode}")
 
 
-def main(book: Book, commands: list[tuple[str, str]]) -> None | str:
-    for cmd, method_type in commands:
-        if cmd == "display":
-            book.display(method_type)
-        elif cmd == "print":
-            book.print_book(method_type)
-        elif cmd == "serialize":
-            return book.serialize(method_type)
+class PrintBook:
+    def __init__(self, display_service: DisplayBook):
+        self.display_service = display_service
+
+    def print_book(self, book: Book, mode: str) -> None:
+        # Отримуємо відформатований рядок від іншого сервісу
+        formatted_content = self.display_service.format(book, mode)
+        print(f"--- Printing Book: {book.title} ({mode} mode) ---")
+        print(formatted_content)
 
 
-if __name__ == "__main__":
-    sample_book = Book("Sample Book", "This is some sample content.")
-    print(main(sample_book, [("display", "reverse"), ("serialize", "xml")]))
+class BookSerializer:
+    def __init__(self, book: Book):
+        self.book = book
+
+    def to_json(self) -> str:
+        return json.dumps({"title": self.book.title, "content": self.book.content}, ensure_ascii=False)
+
+    def to_xml(self) -> str:
+        root = ET.Element("book")
+        ET.SubElement(root, "title").text = self.book.title
+        ET.SubElement(root, "content").text = self.book.content
+        return ET.tostring(root, encoding="unicode")
+
+    def serialize(self, format_type: str) -> str:
+        formats = {
+            "json": self.to_json,
+            "xml": self.to_xml
+        }
+        if format_type not in formats:
+            raise ValueError(f"Unknown serialize type: {format_type}")
+        return formats[format_type]()
+
+
+class BookManager:
+    def run(self, book: Book, commands: List[Tuple[str, str]]) -> Optional[str]:
+        display_service = DisplayBook()
+        printer = PrintBook(display_service)
+        serializer = BookSerializer(book)
+
+        last_result = None
+
+        for cmd, arg in commands:
+            if cmd == "display" or cmd == "print":
+                printer.print_book(book, arg)
+            elif cmd == "serialize":
+                last_result = serializer.serialize(arg)
+
+        return last_result
